@@ -1,63 +1,46 @@
 import React, {Component} from 'react';
+import {connect} from 'react-redux'; 
 
+import {setDone, attatchData} from './store/TodoReducer';
+import { getTodos } from './AppService';
 import Todo from './Todo';
+import Counter from './Counter';
 
 class App extends Component {
-  constructor() {
-    super();
-
-    this.state = {
-      todos: []
-    };
-  }
 
   async componentDidMount() {
-    const response = await fetch('https://jsonplaceholder.typicode.com/todos');
-    const todos = await response.json();
-    this.setState({todos});
+    this.props.getTodos();
   };
   
-  complet = (id) => {
-    this.setState((state) => {
-      const todos = state.todos.map(item => {
-        if (item.id != id) {
-          return item;
-        }
-
-        item.completed = true;
-
-        return item;
-      });
-
-      return {todos}
-    });
-  };
-
-
   render() {
-    const todos = this.state.todos.map((item, index) => {
+    const {todos, isLoading} = this.props;
+
+    const todosList = todos.map((item, index) => {
       return (
-        <Todo key={index} {...item} complet={this.complet} />
+        <Todo key={index} {...item} complet={this.props.setDone} />
       )
     });
 
-    const completedTodos = this.state.todos.filter(item => item.completed).length;
-
     return (
       <div>
+        <Counter/>
 
-        <div>
-          Completed {completedTodos}
-        </div>
-
-        <br/>
-        
-        <div>{todos}</div>
+        <div>{isLoading ? 'Loading...' : todosList}</div>
       </div>
     )
   }
 }
 
+const mapStoreToProps = (store) => {
+  return {
+    todos: store.todo.todos,
+    isLoading: store.todo.isLoading
+  }
+}
 
+const mapDispatchToProps = {
+  setDone,
+  getTodos
+};
 
-export default App;
+export default connect(mapStoreToProps, mapDispatchToProps)(App);
